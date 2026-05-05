@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@import "tailwindcss/preflight";
+
+@tailwind utilities;
+
+@font-face {
+  font-family: ubun;
+  src: url('./assets/fonts/Ubuntu/Ubuntu-Regular.ttf');
+}
+
+*
+{
+  font-family: ubun;
+}
+
+
+@layer components {
+  .ubun {
+    font-family: ubun;
+  }
+
+  .bordereddiv {
+    @apply border-solid border border-black;
+  }
+
+  .align-element{
+    @apply max-w-6xl mx-auto px-8
+  }
+
+  .unicorn{
+    @apply h-50 w-50 object-cover
+  }
+}
