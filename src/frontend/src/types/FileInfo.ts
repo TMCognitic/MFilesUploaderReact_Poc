@@ -3,7 +3,6 @@ export type FileInfo = {
     name: string,
     type: string,
     hash: string,
-    isValid: boolean,    
-    content: Uint8Array,
+    isValid: boolean,
     file: File
 };

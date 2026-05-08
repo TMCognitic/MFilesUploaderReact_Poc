@@ -11,6 +11,7 @@ import { DeleteButton } from "../components/DeleteButton";
 
 export const MultiFiles = () => {
   const [filesDetails, setFilesDetails] = useState<FileInfo[]>([]);
+
   const gridRef = useRef<dxDataGrid>(null);
 
   const hashFile = async (file: File): Promise<string> => {
@@ -33,7 +34,7 @@ export const MultiFiles = () => {
   };
 
   const onUpload = async (e: ValueChangedEvent) => {
-    if (e.value) {
+    if (e.value && e.value.length > 0) {      
       const files: File[] = e.value;
       console.log(`received ${files.length} files : \n`, files);
       const fileInfos: FileInfo[] = (await filesDetails).slice();
@@ -64,12 +65,15 @@ export const MultiFiles = () => {
         console.log(`file ${file.name} found : ${found}`);
 
         if (!found) {
-          fileInfos.push(({ uid: crypto.randomUUID(), name: file.name, type: file.type, isValid: isValid, hash: hash, content: bytes, file: file }) as FileInfo);
+          fileInfos.push(({ uid: crypto.randomUUID(), name: file.name, type: file.type, isValid: isValid, hash: hash, file: file }) as FileInfo);
         }
+        
         console.log("setFilesDetails");
         console.log(fileInfos);
-      };
+      };      
+      
       await setFilesDetails(fileInfos);
+      e.component.clear();
     }
   };
 
@@ -93,6 +97,49 @@ export const MultiFiles = () => {
         <DeleteButton uid={cellData.data!.uid} onDelete={handleDelete}>Delete</DeleteButton>
       );
     }, [handleDelete]);
+
+  const uploadOneFile = async ({ file, ...metadata }: FileInfo) => {
+    console.log(`metadata : `, metadata);
+    const formData = new FormData();
+    formData.append("files", file);
+    formData.append("metadata", JSON.stringify(metadata));
+
+    const response = await fetch("https://localhost:7207/mfiles", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const json = await response.text();
+      throw new Error(`Erreur upload ${file.name} : ${json}`);
+    }
+
+    return response.json();
+  };
+
+  const submit = async () => {
+    if (!filesDetails) return;
+
+    let fileInfos: FileInfo[] = (await filesDetails).slice();
+
+    // Ajouter chaque fichier
+    const uploads = Array.from(fileInfos).filter(fi => fi.isValid).map(fileInfo =>
+      uploadOneFile(fileInfo)
+    );
+
+    const results = await Promise.allSettled(uploads);
+
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        fileInfos = fileInfos.filter(fi => fi !== filesDetails[index]);
+        console.log(`OK : ${filesDetails[index].file.name}`, result.value);
+      } else {
+        console.error(`Erreur : ${filesDetails[index].file.name}`, result.reason);
+      }
+    });
+
+    await setFilesDetails(fileInfos);
+  };
 
   return (<>
     {filesDetails && (<DataGrid
@@ -141,5 +188,6 @@ export const MultiFiles = () => {
       uploadFile={() => { }}
       onValueChanged={onUpload}
     />
+    <Button onClick={submit}>Send</Button>
   </>);
 };
