@@ -6,9 +6,10 @@ namespace MFilesApi.Tools
     {
         extension(byte[] data)
         {
-            public byte[] Hash()
+            public string Hash()
             {
-                return SHA512.HashData(data);
+                byte[] hash = SHA512.HashData(data);
+                return Convert.ToHexString(hash).ToLowerInvariant();
             }
         }
 

@@ -17,7 +17,8 @@ export const MultiFiles = () => {
   const hashFile = async (file: File): Promise<string> => {
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-512", buffer);
-    return Promise.resolve(Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join(""));
+    const hash = [...new Uint8Array(hashBuffer)].map(b => b.toString(16).padStart(2, "0")).join("");
+    return Promise.resolve(hash);
   };
 
   const areFileEqual = async (file1: File, file2: File): Promise<boolean> => {
