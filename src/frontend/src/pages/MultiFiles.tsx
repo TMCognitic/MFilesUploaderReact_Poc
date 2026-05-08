@@ -161,7 +161,6 @@ export const MultiFiles = () => {
       height='95%'
       width='100%'
       remoteOperations={{ paging: false, filtering: false, sorting: false }}
-      //sorting={{ mode: 'multiple' }} // Enable multiple column sorting, use shift for that
       showBorders
       showRowLines
       showColumnLines
@@ -189,28 +188,12 @@ export const MultiFiles = () => {
       />
       <Column dataField='isValid' dataType='string' width='auto' allowEditing={false} />
       <Column
-        dataField="documentType"
-        allowEditing={true}
-        dataType="number"
-        width='auto'
-        cellRender={(cellData: ColumnCellTemplateData<FileInfo>) => {
-          return(<div>{DocumentTypesOptions[cellData.data!.typeDocument].text}</div>);
-          
-        }}       
-        editCellComponent={({ typeDocument } : FileInfo) => (
-          <SelectBox
-            dataSource={DocumentTypesOptions}
-            value={typeDocument}
-            valueExpr="id"
-            displayExpr="text"
-            onValueChanged={(e) => 
-            {
-              typeDocument = e.value as number;
-              e.component._refresh();
-              e.component.endUpdate();
-            }
-               } />)}
-      />
+        dataField="typeDocument"        
+        lookup={{
+          dataSource: DocumentTypesOptions,
+          valueExpr: "id",
+          displayExpr: "text"
+        }} />
       <Column
         caption=''
         cellRender={renderDeleteCell}
