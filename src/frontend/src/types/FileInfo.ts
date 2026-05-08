@@ -3,6 +3,7 @@ export type FileInfo = {
     name: string,
     type: string,
     hash: string,
+    typeDocument: number
     isValid: boolean,
     file: File
 };

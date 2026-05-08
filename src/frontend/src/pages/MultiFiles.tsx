@@ -1,12 +1,13 @@
-import { FileUploader, DataGrid, Button } from "devextreme-react";
+import { FileUploader, DataGrid, Button, SelectBox } from "devextreme-react";
 import { useCallback, useRef, useState } from "react";
 import { fileTypes } from "../utils/ValidFileTypes";
 import type { FileInfo } from "../types/FileInfo";
 import type { ValueChangedEvent } from "devextreme/ui/file_uploader";
-import { Column } from "devextreme-react/data-grid";
-import type { ColumnCellTemplateData } from "devextreme/ui/data_grid";
+import { Column, Editing } from "devextreme-react/data-grid";
+import type { ColumnCellTemplateData, RowPreparedEvent } from "devextreme/ui/data_grid";
 import type dxDataGrid from "devextreme/ui/data_grid";
 import { DeleteButton } from "../components/DeleteButton";
+import { DocumentTypesOptions } from "../utils/DocumentTypeOptions";
 
 
 export const MultiFiles = () => {
@@ -35,7 +36,7 @@ export const MultiFiles = () => {
   };
 
   const onUpload = async (e: ValueChangedEvent) => {
-    if (e.value && e.value.length > 0) {      
+    if (e.value && e.value.length > 0) {
       const files: File[] = e.value;
       console.log(`received ${files.length} files : \n`, files);
       const fileInfos: FileInfo[] = (await filesDetails).slice();
@@ -66,13 +67,13 @@ export const MultiFiles = () => {
         console.log(`file ${file.name} found : ${found}`);
 
         if (!found) {
-          fileInfos.push(({ uid: crypto.randomUUID(), name: file.name, type: file.type, isValid: isValid, hash: hash, file: file }) as FileInfo);
+          fileInfos.push(({ uid: crypto.randomUUID(), name: file.name, type: file.type, isValid: isValid, hash: hash, file: file, typeDocument: 0 }) as FileInfo);
         }
-        
+
         console.log("setFilesDetails");
         console.log(fileInfos);
-      };      
-      
+      };
+
       await setFilesDetails(fileInfos);
       e.component.clear();
     }
@@ -142,6 +143,17 @@ export const MultiFiles = () => {
     await setFilesDetails(fileInfos);
   };
 
+  const onRowPrepared = (e: RowPreparedEvent<FileInfo>) => {
+    if (e.rowType === "data") {
+      const isValid = e.data.isValid;
+
+      if (!isValid) {
+        e.rowElement.style.backgroundColor = "#ffe5e5"; // rouge clair
+        e.rowElement.style.color = "#900";               // texte rouge foncé
+      }
+    }
+  };
+
   return (<>
     {filesDetails && (<DataGrid
       ref={gridRef}
@@ -158,9 +170,14 @@ export const MultiFiles = () => {
       scrolling={{
         mode: 'standard',
       }}
-      visible={filesDetails.length ? true : false} className="align-element">
-      <Column dataField='uid' dataType='string' width='auto' cssClass="uppercaseText" />
-      <Column dataField='name' dataType='string' width='15%' />
+      visible={filesDetails.length ? true : false} className="align-element"
+      onRowPrepared={onRowPrepared}>
+      <Editing
+        mode="cell"
+        allowUpdating={true}
+      />
+      <Column dataField='uid' dataType='string' width='auto' cssClass="uppercaseText" allowEditing={false} />
+      <Column dataField='name' dataType='string' width='15%' allowEditing={false} />
       <Column
         caption='Type'
         cellRender={renderTypeCell}
@@ -168,8 +185,32 @@ export const MultiFiles = () => {
         allowFiltering={false}
         allowSorting={false}
         dataType='string'
+        allowEditing={false}
       />
-      <Column dataField='isValid' dataType='string' width='auto' />
+      <Column dataField='isValid' dataType='string' width='auto' allowEditing={false} />
+      <Column
+        dataField="documentType"
+        allowEditing={true}
+        dataType="number"
+        width='auto'
+        cellRender={(cellData: ColumnCellTemplateData<FileInfo>) => {
+          return(<div>{DocumentTypesOptions[cellData.data!.typeDocument].text}</div>);
+          
+        }}       
+        editCellComponent={({ typeDocument } : FileInfo) => (
+          <SelectBox
+            dataSource={DocumentTypesOptions}
+            value={typeDocument}
+            valueExpr="id"
+            displayExpr="text"
+            onValueChanged={(e) => 
+            {
+              typeDocument = e.value as number;
+              e.component._refresh();
+              e.component.endUpdate();
+            }
+               } />)}
+      />
       <Column
         caption=''
         cellRender={renderDeleteCell}
@@ -185,7 +226,6 @@ export const MultiFiles = () => {
       multiple={true}
       uploadMode="instantly"
       showFileList={false}
-      //onValueChange={onValueChange}
       uploadFile={() => { }}
       onValueChanged={onUpload}
     />
