@@ -1,1 +1,0 @@
-export const fileTypes: string[] = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf'];

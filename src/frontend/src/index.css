@@ -8,9 +8,14 @@
   src: url('./assets/fonts/Ubuntu/Ubuntu-Regular.ttf');
 }
 
-*
-{
+*{
   font-family: ubun;
+}
+
+.uppercaseText
+{
+  font-family: consolas;
+  text-transform: uppercase;
 }
 
 
